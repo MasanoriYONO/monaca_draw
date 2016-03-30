@@ -2,18 +2,19 @@
 <html>
 <head>
 <meta charset="utf-8">
-<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
 <script>
-window.onload = function(){
-	console.log("init.");
-	/* canvasの読み込み設定。 */
-    var canvas = document.getElementById("canvas");
-    var ctx = canvas.getContext("2d");    
-    
+$(function(){
+	
+	var canvas = $("#canvas").get(0);
+	var ctx = canvas.getContext("2d");
+
+    var paint = false;
+    var offset = 5;
     var draw = false;
     
     /* マウスの座標を取得する */
-    canvas.addEventListener("mousemove",function(e) {
+    $("#canvas").on("mousemove",function(e) {
     	console.log("mousemove.");
     	
     	ctx.lineWidth = document.getElementById("lineWidth").value;
@@ -47,7 +48,7 @@ window.onload = function(){
     });
   
     /* クリックしたら描画をOKの状態にする */
-    canvas.addEventListener("mousedown",function(e) {
+    $("#canvas").on("mousedown",function(e) {
     	console.log("mousedown.");
     	console.log("mouseX:" + mouseX);
     	console.log("mouseY:" + mouseY);
@@ -61,7 +62,7 @@ window.onload = function(){
         undoImage = ctx.getImageData(0, 0,canvas.width,canvas.height);
     });
     /* クリックを離したら、描画を終了する */
-    canvas.addEventListener("mouseup", function(e){
+    $("#canvas").on("mouseup", function(e){
 	    console.log("mouseup.");
 	    
 	    console.log("mouseX:" + mouseX);
@@ -72,39 +73,38 @@ window.onload = function(){
     });
 	
 	/* 線の太さの値を変える */
-    var lineWidth = document.getElementById("lineWidth");
-    lineWidth.addEventListener("mousemove",function(){  
-        var lineNum = lineWidth.value;
-        document.getElementById("lineNum").innerHTML = lineNum;
+    $("#lineWidth").on("mousemove touchmove",function(){  
+        var lineNum = $("#lineWidth").val();
+		$("#lineNum").html(lineNum);
     });
+    
     /* 透明度の値を変える */
-    var alpha = document.getElementById("alpha");
-    alpha.addEventListener("mousemove",function(){  
-        var alphaNum = alpha.value;
-        document.getElementById("alphaNum").innerHTML = alphaNum;
-    });
+    $("#alpha").on("mousemove touchmove",function(){  
+		var alphaNum = $("#alpha").val();
+		$("#alphaNum").html(alphaNum);
+	});
     
     /* 色を選択 */
     $('li').click(function() {
-        ctx.strokeStyle = $(this).css('background-color');
-        $('ul > li').css('padding','0px');
+		ctx.strokeStyle = $(this).css('background-color');
+		$('ul > li').css('padding','0px');
         $(this).css('padding','3px');
-    });
+	});
     
     /* 消去ボタン */
     $('#clear').click(function(e) {
-        if(!confirm('本当に消去しますか？')){
-        	return;
-        }
-        e.preventDefault();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    });
+		if(!confirm('本当に消去しますか？')){
+			return;
+		}
+		e.preventDefault();
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+	});
     
     /* 戻るボタン */
     $('#undo').click(function(e) {
-        ctx.putImageData(undoImage,0,0);
-    });
-};
+		ctx.putImageData(undoImage,0,0);
+	});
+});
 </script>
 <style>
 body {
