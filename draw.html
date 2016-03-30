@@ -9,11 +9,15 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.2/moment.min.js"></script>
+    <script src="b64utils.js"></script>
 <script>
+var canvas;
+var ctx;
+
 $(function(){
     
-	var canvas = $("#canvas").get(0);
-	var ctx = canvas.getContext("2d");
+	canvas = $("#canvas").get(0);
+	ctx = canvas.getContext("2d");
 
     var paint = false;
     var offset = 5;
@@ -125,7 +129,7 @@ $(function(){
         startX = e.originalEvent.changedTouches[0].pageX - rect.left - offset;
         startY = e.originalEvent.changedTouches[0].pageY - rect.top - offset;
 		
-        ctx.drawImage(img,startX-img.width/2,startY-img.height/2);
+        // ctx.drawImage(img,startX-img.width/2,startY-img.height/2);
         
 		ctx.lineWidth = $("#lineWidth").val();
 		ctx.globalAlpha = $("#alpha").val()/100;
@@ -154,6 +158,55 @@ $(function(){
         paint = false;
     });
 });
+
+//保存する
+function save(){
+    var m = moment();
+    ctx.font= '20px Century Gothic';
+	ctx.fillStyle = '#888888';
+	ctx.fillText(m.format("YYYY-MM-DD HH:mm:ss"),10,30);
+    
+    // var image_file_name = m.format("YYYYMMDD_HHmmss") + ".png";
+    var image_file_name = "image.png";
+    
+    var url = canvas.toDataURL();
+	var base64data = url.split(',')[1];
+	var array = b64utils.decode( base64data );
+	
+    window.requestFileSystem(
+        LocalFileSystem.PERSISTENT
+        , 0
+        , function(fileSys) {      
+            fileSys.root.getDirectory(
+                ""
+                ,{create:true, exclusive: false}
+                ,function(dirEntry) {
+                    dirEntry.getFile(
+                        image_file_name
+                        , {create: true}
+                        , function(entry) {
+                            entry.createWriter( 
+                                function(writer) {
+                                    writer.onwrite = function() {
+                                        console.log(image_file_name + " write complete.");
+                                    }
+                                    writer.onerror = function() {
+                                        console.log("write error"); 
+                                    }
+                                    writer.write(array);
+                                } ,
+                                canvas_failFS
+                            );
+                        }
+                        , canvas_failFS);
+                }
+                ,canvas_failFS);
+            }
+        ,canvas_failFS);
+}
+function canvas_failFS(error) {
+    console.log("canvas_failFS.");
+}
 </script>
 <style>
 body {
@@ -203,6 +256,7 @@ li {
         <div id="item2">
         	<p><button style="width:120px;" id="undo">１つ前の状態に戻す</button></p>
             <p><button style="width:120px;" id="clear">消去</button></p>
+            <p><button style="width:120px;" onclick="save();">保存</button></p>
         </div>
     </div>
     
