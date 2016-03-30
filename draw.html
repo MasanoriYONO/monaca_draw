@@ -125,6 +125,8 @@ $(function(){
         startX = e.originalEvent.changedTouches[0].pageX - rect.left - offset;
         startY = e.originalEvent.changedTouches[0].pageY - rect.top - offset;
 		
+        ctx.drawImage(img,startX-img.width/2,startY-img.height/2);
+        
 		ctx.lineWidth = $("#lineWidth").val();
 		ctx.globalAlpha = $("#alpha").val()/100;
         
