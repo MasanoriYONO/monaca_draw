@@ -1,19 +1,39 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<meta charset="utf-8">
-<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data:; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="components/loader.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.2/moment.min.js"></script>
+    <script src="b64utils.js"></script>
 <script>
-window.onload = function(){
-	console.log("init.");
-	/* canvasの読み込み設定。 */
-    var canvas = document.getElementById("canvas");
-    var ctx = canvas.getContext("2d");    
+var canvas;
+var ctx;
+
+$(function(){
     
+	canvas = $("#canvas").get(0);
+	ctx = canvas.getContext("2d");
+    
+    ctx.fillStyle = '#eeeeee';
+    ctx.fillRect(0,0,320,320);
+ 
+    var paint = false;
+    var offset = 5;
     var draw = false;
-    
+    var img = new Image();
+    img.onload = (function(){
+        console.log("image onload.");
+    });
+    //画像のパス指定
+    img.src = "smile.png";
+ 
     /* マウスの座標を取得する */
-    canvas.addEventListener("mousemove",function(e) {
+    $("#canvas").on("mousemove",function(e) {
     	console.log("mousemove.");
     	
     	ctx.lineWidth = document.getElementById("lineWidth").value;
@@ -47,7 +67,7 @@ window.onload = function(){
     });
   
     /* クリックしたら描画をOKの状態にする */
-    canvas.addEventListener("mousedown",function(e) {
+    $("#canvas").on("mousedown",function(e) {
     	console.log("mousedown.");
     	console.log("mouseX:" + mouseX);
     	console.log("mouseY:" + mouseY);
@@ -61,7 +81,7 @@ window.onload = function(){
         undoImage = ctx.getImageData(0, 0,canvas.width,canvas.height);
     });
     /* クリックを離したら、描画を終了する */
-    canvas.addEventListener("mouseup", function(e){
+    $("#canvas").on("mouseup", function(e){
 	    console.log("mouseup.");
 	    
 	    console.log("mouseX:" + mouseX);
@@ -72,39 +92,124 @@ window.onload = function(){
     });
 	
 	/* 線の太さの値を変える */
-    var lineWidth = document.getElementById("lineWidth");
-    lineWidth.addEventListener("mousemove",function(){  
-        var lineNum = lineWidth.value;
-        document.getElementById("lineNum").innerHTML = lineNum;
+    $("#lineWidth").on("mousemove touchmove",function(){  
+        var lineNum = $("#lineWidth").val();
+		$("#lineNum").html(lineNum);
     });
+    
     /* 透明度の値を変える */
-    var alpha = document.getElementById("alpha");
-    alpha.addEventListener("mousemove",function(){  
-        var alphaNum = alpha.value;
-        document.getElementById("alphaNum").innerHTML = alphaNum;
-    });
+    $("#alpha").on("mousemove touchmove",function(){  
+		var alphaNum = $("#alpha").val();
+		$("#alphaNum").html(alphaNum);
+	});
     
     /* 色を選択 */
     $('li').click(function() {
-        ctx.strokeStyle = $(this).css('background-color');
-        $('ul > li').css('padding','0px');
+		ctx.strokeStyle = $(this).css('background-color');
+		$('ul > li').css('padding','0px');
         $(this).css('padding','3px');
-    });
+	});
     
     /* 消去ボタン */
     $('#clear').click(function(e) {
-        if(!confirm('本当に消去しますか？')){
-        	return;
-        }
-        e.preventDefault();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    });
+		if(!confirm('本当に消去しますか？')){
+			return;
+		}
+		e.preventDefault();
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+	});
     
     /* 戻るボタン */
     $('#undo').click(function(e) {
-        ctx.putImageData(undoImage,0,0);
+		ctx.putImageData(undoImage,0,0);
+	});
+    
+    //タッチした瞬間座標を取得
+    $("#canvas").on("touchstart",function(e){
+        paint = true;
+        var rect = e.target.getBoundingClientRect();
+        e.preventDefault();
+        startX = e.originalEvent.changedTouches[0].pageX - rect.left - offset;
+        startY = e.originalEvent.changedTouches[0].pageY - rect.top - offset;
+		
+        // ctx.drawImage(img,startX-img.width/2,startY-img.height/2);
+        
+		ctx.lineWidth = $("#lineWidth").val();
+		ctx.globalAlpha = $("#alpha").val()/100;
+        
+        undoImage = ctx.getImageData(0, 0,canvas.width,canvas.height);
+	});
+	//タッチして動き出したら描画
+	$("#canvas").on("touchmove",function(e){
+		if (paint) {
+			var rect = e.target.getBoundingClientRect();
+			
+			endX = e.originalEvent.changedTouches[0].pageX - rect.left - offset;
+			endY = e.originalEvent.changedTouches[0].pageY - rect.top - offset;
+        
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.lineCap = "round";
+            ctx.stroke();
+            startX = endX;
+            startY = endY;
+        }
+	});
+	
+    $('#canvas').on("touchend", function(e) {
+        paint = false;
     });
-};
+});
+
+//保存する
+function save(){
+    var m = moment();
+    ctx.font= '20px Century Gothic';
+	ctx.fillStyle = '#888888';
+	ctx.fillText(m.format("YYYY-MM-DD HH:mm:ss"),10,30);
+    
+    // var image_file_name = m.format("YYYYMMDD_HHmmss") + ".png";
+    var image_file_name = "image.png";
+    
+    var url = canvas.toDataURL();
+	var base64data = url.split(',')[1];
+	var array = b64utils.decode( base64data );
+	
+    window.requestFileSystem(
+        LocalFileSystem.PERSISTENT
+        , 0
+        , function(fileSys) {      
+            fileSys.root.getDirectory(
+                ""
+                ,{create:true, exclusive: false}
+                ,function(dirEntry) {
+                    dirEntry.getFile(
+                        image_file_name
+                        , {create: true}
+                        , function(entry) {
+                            entry.createWriter( 
+                                function(writer) {
+                                    writer.onwrite = function() {
+                                        console.log(image_file_name + " write complete.");
+                                    }
+                                    writer.onerror = function() {
+                                        console.log("write error"); 
+                                    }
+                                    writer.write(array);
+                                } ,
+                                canvas_failFS
+                            );
+                        }
+                        , canvas_failFS);
+                }
+                ,canvas_failFS);
+            }
+        ,canvas_failFS);
+}
+function canvas_failFS(error) {
+    console.log("canvas_failFS.");
+}
 </script>
 <style>
 body {
@@ -154,6 +259,7 @@ li {
         <div id="item2">
         	<p><button style="width:120px;" id="undo">１つ前の状態に戻す</button></p>
             <p><button style="width:120px;" id="clear">消去</button></p>
+            <p><button style="width:120px;" onclick="save();">保存</button></p>
         </div>
     </div>
     
