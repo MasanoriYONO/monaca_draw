@@ -1,0 +1,162 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script>
+window.onload = function(){
+	console.log("init.");
+	/* canvasの読み込み設定。 */
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext("2d");    
+    
+    var draw = false;
+    
+    /* マウスの座標を取得する */
+    canvas.addEventListener("mousemove",function(e) {
+    	console.log("mousemove.");
+    	
+    	ctx.lineWidth = document.getElementById("lineWidth").value;
+        ctx.globalAlpha = document.getElementById("alpha").value/100;
+        
+    	var rect = e.target.getBoundingClientRect();
+		console.log("rect.left:" + rect.left);
+    	console.log("rect.top:" + rect.top);
+    	console.log("e.clientX:" + e.clientX);
+    	console.log("e.clientY:" + e.clientY);
+    	
+    	/* canvasの中での座標。左上が原点。*/
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+		console.log("mouseX:" + mouseX);
+    	console.log("mouseY:" + mouseY);
+    	
+    	/* クリック状態なら描画をする */
+        if(draw === true) {
+            console.log("draw:" + draw);
+            
+            ctx.beginPath();
+            ctx.moveTo(mouseX1,mouseY1);
+            ctx.lineTo(mouseX,mouseY);
+            ctx.lineCap = "round";
+            ctx.stroke();
+            /* 直前の座標を保持しておく。*/
+            mouseX1 = mouseX;
+            mouseY1 = mouseY;
+        }
+    });
+  
+    /* クリックしたら描画をOKの状態にする */
+    canvas.addEventListener("mousedown",function(e) {
+    	console.log("mousedown.");
+    	console.log("mouseX:" + mouseX);
+    	console.log("mouseY:" + mouseY);
+    	
+    	draw = true;
+    	console.log("draw:" + draw);
+    	
+    	mouseX1 = mouseX;
+        mouseY1 = mouseY;
+    	/* canvasの直前の状態を保持しておく。 */
+        undoImage = ctx.getImageData(0, 0,canvas.width,canvas.height);
+    });
+    /* クリックを離したら、描画を終了する */
+    canvas.addEventListener("mouseup", function(e){
+	    console.log("mouseup.");
+	    
+	    console.log("mouseX:" + mouseX);
+    	console.log("mouseY:" + mouseY);
+    	
+    	draw = false;
+    	console.log("draw:" + draw);
+    });
+	
+	/* 線の太さの値を変える */
+    var lineWidth = document.getElementById("lineWidth");
+    lineWidth.addEventListener("mousemove",function(){  
+        var lineNum = lineWidth.value;
+        document.getElementById("lineNum").innerHTML = lineNum;
+    });
+    /* 透明度の値を変える */
+    var alpha = document.getElementById("alpha");
+    alpha.addEventListener("mousemove",function(){  
+        var alphaNum = alpha.value;
+        document.getElementById("alphaNum").innerHTML = alphaNum;
+    });
+    
+    /* 色を選択 */
+    $('li').click(function() {
+        ctx.strokeStyle = $(this).css('background-color');
+        $('ul > li').css('padding','0px');
+        $(this).css('padding','3px');
+    });
+    
+    /* 消去ボタン */
+    $('#clear').click(function(e) {
+        if(!confirm('本当に消去しますか？')){
+        	return;
+        }
+        e.preventDefault();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+    
+    /* 戻るボタン */
+    $('#undo').click(function(e) {
+        ctx.putImageData(undoImage,0,0);
+    });
+};
+</script>
+<style>
+body {
+ text-align:center;
+ margin:0 auto;
+ 
+}
+#canvas {
+  border:1px solid gray;
+}
+#aaa {
+    margin-top:20px;
+}
+#bbb {
+    width: 100%;
+    margin: 0 auto;  
+}
+ul{
+    padding-left: 0px;
+}
+li {
+    width: 30px;
+    height: 30px;
+    display:inline-block;  
+}
+</style>
+</head>
+</head>
+<body>
+<div id="aaa">
+    <div id="bbb">
+        <canvas id="canvas" width="320px" height="320px">残念ながらHTML5に対応していません</canvas>
+        <ul>
+            <li style="background-color:#000000"></li>
+            <li style="background-color:#ff0000"></li>
+            <li style="background-color:#00ff00"></li>
+            <li style="background-color:#0000ff"></li>
+        </ul>
+    </div>
+    
+    <div id="item">
+        <div id="item1">
+            <p>線の太さ<input type="range" min="0" max="100" value="10" id="lineWidth"><span id="lineNum">10</span></p>
+            <p>透 明 度<input type="range" min="0" max="100" value="100" id="alpha"><span id="alphaNum">100</span></p>
+        </div>
+        
+        <div id="item2">
+        	<p><button style="width:120px;" id="undo">１つ前の状態に戻す</button></p>
+            <p><button style="width:120px;" id="clear">消去</button></p>
+        </div>
+    </div>
+    
+</div>
+</body>
+</html>
