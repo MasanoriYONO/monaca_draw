@@ -18,7 +18,13 @@ $(function(){
     var paint = false;
     var offset = 5;
     var draw = false;
-    
+    var img = new Image();
+    img.onload = (function(){
+        console.log("image onload.");
+    });
+    //画像のパス指定
+    img.src = "smile.png";
+ 
     /* マウスの座標を取得する */
     $("#canvas").on("mousemove",function(e) {
     	console.log("mousemove.");
@@ -121,7 +127,8 @@ $(function(){
 		
 		ctx.lineWidth = $("#lineWidth").val();
 		ctx.globalAlpha = $("#alpha").val()/100;
-		undoImage = ctx.getImageData(0, 0,canvas.width,canvas.height);
+        
+        undoImage = ctx.getImageData(0, 0,canvas.width,canvas.height);
 	});
 	//タッチして動き出したら描画
 	$("#canvas").on("touchmove",function(e){
