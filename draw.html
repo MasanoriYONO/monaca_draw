@@ -18,7 +18,10 @@ $(function(){
     
 	canvas = $("#canvas").get(0);
 	ctx = canvas.getContext("2d");
-
+    
+    ctx.fillStyle = '#eeeeee';
+    ctx.fillRect(0,0,320,320);
+ 
     var paint = false;
     var offset = 5;
     var draw = false;
