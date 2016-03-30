@@ -110,6 +110,40 @@ $(function(){
     $('#undo').click(function(e) {
 		ctx.putImageData(undoImage,0,0);
 	});
+    
+    //タッチした瞬間座標を取得
+    $("#canvas").on("touchstart",function(e){
+        paint = true;
+        var rect = e.target.getBoundingClientRect();
+        e.preventDefault();
+        startX = e.originalEvent.changedTouches[0].pageX - rect.left - offset;
+        startY = e.originalEvent.changedTouches[0].pageY - rect.top - offset;
+		
+		ctx.lineWidth = $("#lineWidth").val();
+		ctx.globalAlpha = $("#alpha").val()/100;
+		undoImage = ctx.getImageData(0, 0,canvas.width,canvas.height);
+	});
+	//タッチして動き出したら描画
+	$("#canvas").on("touchmove",function(e){
+		if (paint) {
+			var rect = e.target.getBoundingClientRect();
+			
+			endX = e.originalEvent.changedTouches[0].pageX - rect.left - offset;
+			endY = e.originalEvent.changedTouches[0].pageY - rect.top - offset;
+        
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.lineCap = "round";
+            ctx.stroke();
+            startX = endX;
+            startY = endY;
+        }
+	});
+	
+    $('#canvas').on("touchend", function(e) {
+        paint = false;
+    });
 });
 </script>
 <style>
